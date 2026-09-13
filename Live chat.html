@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Live Chat Pengaduan - Customer Service</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: #f4f4f4;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 900px;
+            height: 90vh;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER */
+        .chat-header {
+            background: #ee4d2d;
+            color: white;
+            padding: 18px 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cs-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 45px;
+            height: 45px;
+            background: white;
+            color: #ee4d2d;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .cs-info h2 {
+            font-size: 17px;
+            margin-bottom: 4px;
+        }
+
+        .online-status {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .online-dot {
+            width: 8px;
+            height: 8px;
+            background: #42e36f;
+            border-radius: 50%;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .header-btn {
+            border: none;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .header-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* INFO */
+        .ticket-info {
+            background: #fff7f4;
+            border-bottom: 1px solid #eee;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .ticket-number {
+            font-weight: bold;
+            color: #ee4d2d;
+        }
+
+        /* CHAT AREA */
+        .chat-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f7f7f7;
+        }
+
+        .date-divider {
+            text-align: center;
+            margin: 10px 0 20px;
+        }
+
+        .date-divider span {
+            background: #ddd;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 15px;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .message.customer {
+            justify-content: flex-start;
+        }
+
+        .message.cs {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+        }
+
+        .message-name {
+            font-size: 11px;
+            color: #777;
+            margin-bottom: 4px;
+        }
+
+        .customer .message-name {
+            text-align: left;
+        }
+
+        .cs .message-name {
+            text-align: right;
+        }
+
+        .bubble {
+            padding: 11px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .customer .bubble {
+            background: white;
+            border: 1px solid #e6e6e6;
+            border-top-left-radius: 3px;
+        }
+
+        .cs .bubble {
+            background: #ee4d2d;
+            color: white;
+            border-top-right-radius: 3px;
+        }
+
+        .message-time {
+            font-size: 10px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .cs .message-time {
+            text-align: right;
+        }
+
+        /* TYPING */
+        .typing {
+            display: none;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 10px;
+            color: #777;
+            font-size: 12px;
+        }
+
+        .typing.show {
+            display: flex;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            background: #999;
+            border-radius: 50%;
+            animation: bounce 1s infinite;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: .15s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: .3s;
+        }
+
+        /* INPUT */
+        .input-area {
+            border-top: 1px solid #ddd;
+            background: white;
+            padding: 12px;
+        }
+
+        .quick-replies {
+            display: flex;
+            gap: 7px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .quick-btn {
+            white-space: nowrap;
+            border: 1px solid #ee4d2d;
+            color: #ee4d2d;
+            background: white;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .quick-btn:hover {
+            background: #fff0eb;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .emoji-btn,
+        .attach-btn {
+            border: none;
+            background: #f3f3f3;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .emoji-btn:hover,
+        .attach-btn:hover {
+            background: #e7e7e7;
+        }
+
+        #messageInput {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 22px;
+            padding: 11px 15px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        #messageInput:focus {
+            border-color: #ee4d2d;
+        }
+
+        .send-btn {
+            border: none;
+            background: #ee4d2d;
+            color: white;
+            width: 45px;
+            height: 40px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 17px;
+        }
+
+        .send-btn:hover {
+            background: #d84325;
+        }
+
+        .send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* EMOJI */
+        .emoji-panel {
+            display: none;
+            position: absolute;
+            bottom: 85px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 10px;
+            width: 220px;
+            box-shadow: 0 4px 15px rgba(0,0,0,.15);
+        }
+
+        .emoji-panel.show {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+        }
+
+        .emoji {
+            border: none;
+            background: transparent;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .emoji:hover {
+            background: #eee;
+            border-radius: 5px;
+        }
+
+        /* CLOSED */
+        .closed-message {
+            display: none;
+            text-align: center;
+            color: #777;
+            padding: 15px;
+            background: #f8f8f8;
+            border-top: 1px solid #ddd;
+        }
+
+        .closed-message.show {
+            display: block;
+        }
+
+        /* ANIMATION */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* MOBILE */
+        @media(max-width: 600px) {
+
+            body {
+                align-items: stretch;
+            }
+
+            .chat-container {
+                height: 100vh;
+                border-radius: 0;
+            }
+
+            .chat-header {
+                padding: 14px;
+            }
+
+            .ticket-info {
+                padding: 10px 14px;
+            }
+
+            .chat-area {
+                padding: 15px;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .header-btn {
+                padding: 7px 9px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="chat-container">
+
+    <!-- HEADER -->
+    <div class="chat-header">
+
+        <div class="cs-profile">
+
+            <div class="avatar">
+                CS
+            </div>
+
+            <div class="cs-info">
+                <h2>Customer Service</h2>
+
+                <div class="online-status">
+                    <span class="online-dot"></span>
+                    Online
+                </div>
+            </div>
+
+        </div>
+
+        <div class="header-buttons">
+
+            <button class="header-btn" onclick="clearChat()">
+                🗑
+            </button>
+
+            <button class="header-btn" onclick="closeChat()">
+                ✕
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- TICKET INFO -->
+    <div class="ticket-info">
+
+        <div>
+            Tiket Pengaduan:
+            <span class="ticket-number">
+                #SPY-20260909-001
+            </span>
+        </div>
+
+        <div>
+            Status: <b>Dalam Penanganan</b>
+        </div>
+
+    </div>
+
+
+    <!-- CHAT -->
+    <div class="chat-area" id="chatArea">
+
+        <div class="date-divider">
+            <span>Hari ini</span>
+        </div>
+
+
+        <!-- CUSTOMER -->
+        <div class="message customer">
+
+            <div class="message-content">
+
+                <div class="message-name">
+                    Pelanggan
+                </div>
+
+                <div class="bubble">
+                    Halo, saya ingin mengajukan pengaduan terkait pesanan saya.
+                </div>
+
+                <div class="message-time">
+                    21:25
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- CS -->
+        <div class="message cs">
+
+            <div class="message-content">
+
+                <div class="message-name">
+                    Anda • Customer Service
+                </div>
+
+                <div class="bubble">
+                    Halo! 👋 Selamat datang di layanan Customer Service.
+                    Saya siap membantu pengaduan Anda. Boleh dijelaskan
+                    kendala yang sedang dialami?
+                </div>
+
+                <div class="message-time">
+                    21:26 ✓✓
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- CUSTOMER -->
+        <div class="message customer">
+
+            <div class="message-content">
+
+                <div class="message-name">
+                    Pelanggan
+                </div>
+
+                <div class="bubble">
+                    Pesanan saya belum sampai padahal estimasi pengiriman
+                    sudah lewat.
+                </div>
+
+                <div class="message-time">
+                    21:27
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TYPING -->
+        <div class="typing" id="typing">
+
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            CS sedang mengetik...
+
+        </div>
+
+    </div>
+
+
+    <!-- INPUT AREA -->
+    <div class="input-area" id="inputArea">
+
+        <!-- QUICK REPLY -->
+        <div class="quick-replies">
+
+            <button class="quick-btn"
+                onclick="quickReply('Baik, saya bantu cek terlebih dahulu ya.')">
+                Cek pesanan
+            </button>
+
+            <button class="quick-btn"
+                onclick="quickReply('Mohon tunggu sebentar, saya periksa detail pengaduannya.')">
+                Tunggu sebentar
+            </button>
+
+            <button class="quick-btn"
+                onclick="quickReply('Mohon kirimkan nomor pesanan agar saya dapat melakukan pengecekan.')">
+                Minta nomor pesanan
+            </button>
+
+            <button class="quick-btn"
+                onclick="quickReply('Terima kasih sudah menghubungi Customer Service.')">
+                Penutup
+            </button>
+
+        </div>
+
+
+        <!-- EMOJI PANEL -->
+        <div class="emoji-panel" id="emojiPanel">
+
+            <button class="emoji" onclick="addEmoji('😀')">😀</button>
+            <button class="emoji" onclick="addEmoji('😊')">😊</button>
+            <button class="emoji" onclick="addEmoji('👍')">👍</button>
+            <button class="emoji" onclick="addEmoji('🙏')">🙏</button>
+            <button class="emoji" onclick="addEmoji('😄')">😄</button>
+            <button class="emoji" onclick="addEmoji('🙂')">🙂</button>
+            <button class="emoji" onclick="addEmoji('❤️')">❤️</button>
+            <button class="emoji" onclick="addEmoji('🎉')">🎉</button>
+            <button class="emoji" onclick="addEmoji('😔')">😔</button>
+            <button class="emoji" onclick="addEmoji('😢')">😢</button>
+            <button class="emoji" onclick="addEmoji('👌')">👌</button>
+            <button class="emoji" onclick="addEmoji('✨')">✨</button>
+
+        </div>
+
+
+        <!-- INPUT -->
+        <div class="input-row">
+
+            <button
+                class="emoji-btn"
+                onclick="toggleEmoji()">
+                😊
+            </button>
+
+            <button
+                class="attach-btn"
+                onclick="attachmentInfo()">
+                📎
+            </button>
+
+            <input
+                type="text"
+                id="messageInput"
+                placeholder="Ketik pesan..."
+                autocomplete="off"
+            >
+
+            <button
+                class="send-btn"
+                id="sendButton"
+                onclick="sendMessage()">
+                ➤
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- CLOSED -->
+    <div class="closed-message" id="closedMessage">
+        Percakapan telah ditutup.
+        <button onclick="location.reload()">
+            Mulai kembali
+        </button>
+    </div>
+
+</div>
+
+
+<script>
+
+    const input = document.getElementById("messageInput");
+    const chatArea = document.getElementById("chatArea");
+    const typing = document.getElementById("typing");
+    const emojiPanel = document.getElementById("emojiPanel");
+    const inputArea = document.getElementById("inputArea");
+    const closedMessage = document.getElementById("closedMessage");
+
+
+    /* ENTER UNTUK KIRIM */
+
+    input.addEventListener("keydown", function(event) {
+
+        if (event.key === "Enter") {
+            event.preventDefault();
+            sendMessage();
+        }
+
+    });
+
+
+    /* KIRIM PESAN */
+
+    function sendMessage() {
+
+        const message = input.value.trim();
+
+        if (message === "") {
+            return;
+        }
+
+        addMessage(
+            message,
+            "cs"
+        );
+
+        input.value = "";
+
+        emojiPanel.classList.remove("show");
+
+        autoReply(message);
+
+    }
+
+
+    /* TAMBAH PESAN KE CHAT */
+
+    function addMessage(text, sender) {
+
+        const message = document.createElement("div");
+
+        message.className =
+            "message " + sender;
+
+        const content =
+            document.createElement("div");
+
+        content.className =
+            "message-content";
+
+        const name =
+            document.createElement("div");
+
+        name.className =
+            "message-name";
+
+        if (sender === "cs") {
+
+            name.innerText =
+                "Anda • Customer Service";
+
+        } else {
+
+            name.innerText =
+                "Pelanggan";
+
+        }
+
+
+        const bubble =
+            document.createElement("div");
+
+        bubble.className =
+            "bubble";
+
+        bubble.innerText =
+            text;
+
+
+        const time =
+            document.createElement("div");
+
+        time.className =
+            "message-time";
+
+        const now =
+            new Date();
+
+        const hour =
+            String(now.getHours()).padStart(2, "0");
+
+        const minute =
+            String(now.getMinutes()).padStart(2, "0");
+
+
+        time.innerText =
+            `${hour}:${minute}` +
+            (sender === "cs" ? " ✓✓" : "");
+
+
+        content.appendChild(name);
+        content.appendChild(bubble);
+        content.appendChild(time);
+
+        message.appendChild(content);
+
+        chatArea.insertBefore(
+            message,
+            typing
+        );
+
+        scrollToBottom();
+
+    }
+
+
+    /* AUTO REPLY */
+
+    function autoReply(message) {
+
+        typing.classList.add("show");
+
+        scrollToBottom();
+
+        setTimeout(function() {
+
+            typing.classList.remove("show");
+
+            let reply =
+                "Baik, saya bantu periksa pengaduan Anda terlebih dahulu.";
+
+            const lower =
+                message.toLowerCase();
+
+
+            if (
+                lower.includes("pesanan") ||
+                lower.includes("order")
+            ) {
+
+                reply =
+                    "Baik, untuk membantu pengecekan pesanan, mohon informasikan nomor pesanan Anda.";
+
+            }
+
+            else if (
+                lower.includes("belum") &&
+                lower.includes("sampai")
+            ) {
+
+                reply =
+                    "Mohon maaf atas kendala yang terjadi. Saya akan membantu mengecek status pengiriman pesanan Anda.";
+
+            }
+
+            else if (
+                lower.includes("refund") ||
+                lower.includes("pengembalian")
+            ) {
+
+                reply =
+                    "Baik, saya bantu proses pengecekan terkait pengajuan pengembalian dana Anda.";
+
+            }
+
+            else if (
+                lower.includes("terima kasih") ||
+                lower.includes("makasih")
+            ) {
+
+                reply =
+                    "Sama-sama. Senang bisa membantu Anda. 😊";
+
+            }
+
+
+            addMessage(
+                reply,
+                "customer"
+            );
+
+        }, 1800);
+
+    }
+
+
+    /* QUICK REPLY */
+
+    function quickReply(text) {
+
+        addMessage(
+            text,
+            "cs"
+        );
+
+        autoReply(text);
+
+    }
+
+
+    /* EMOJI */
+
+    function toggleEmoji() {
+
+        emojiPanel.classList.toggle("show");
+
+    }
+
+
+    function addEmoji(emoji) {
+
+        input.value += emoji;
+
+        input.focus();
+
+        emojiPanel.classList.remove("show");
+
+    }
+
+
+    /* ATTACHMENT */
+
+    function attachmentInfo() {
+
+        alert(
+            "Fitur upload lampiran hanya simulasi.\n\n" +
+            "Pada versi PHP + MySQL, fitur ini dapat " +
+            "dikembangkan menjadi upload foto/dokumen."
+        );
+
+    }
+
+
+    /* SCROLL */
+
+    function scrollToBottom() {
+
+        chatArea.scrollTop =
+            chatArea.scrollHeight;
+
+    }
+
+
+    /* CLEAR CHAT */
+
+    function clearChat() {
+
+        const confirmClear =
+            confirm(
+                "Hapus seluruh percakapan?"
+            );
+
+        if (!confirmClear) {
+            return;
+        }
+
+        const messages =
+            document.querySelectorAll(
+                ".message"
+            );
+
+        messages.forEach(function(message) {
+            message.remove();
+        });
+
+        addMessage(
+            "Halo! 👋 Saya Customer Service. Ada yang bisa saya bantu?",
+            "cs"
+        );
+
+    }
+
+
+    /* CLOSE CHAT */
+
+    function closeChat() {
+
+        const confirmClose =
+            confirm(
+                "Apakah Anda yakin ingin menutup percakapan?"
+            );
+
+        if (!confirmClose) {
+            return;
+        }
+
+        inputArea.style.display =
+            "none";
+
+        closedMessage.classList.add(
+            "show"
+        );
+
+    }
+
+
+    /* INITIAL SCROLL */
+
+    scrollToBottom();
+
+</script>
+
+</body>
+</html>
